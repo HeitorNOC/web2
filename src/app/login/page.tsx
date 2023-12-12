@@ -66,10 +66,11 @@ export default function Login() {
                             </Button>
                         </div>
                     </div>
+                <Separator />
                 </CardContent>
                 <CardFooter className="grid mt-0">
                     <Button asChild>
-                        <Link href="/signUp">Criar conta</Link>
+                        <Link href="/register">Criar conta</Link>
                     </Button>
                 </CardFooter>
             </Card>
