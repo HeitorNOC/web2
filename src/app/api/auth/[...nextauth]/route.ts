@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         } else {
           const { email, password } = credentials
-          const response = await fetch('http://localhost:3000/api/login', {
+           const response = await fetch('https://task-api-production-ebcc.up.railway.app/api/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -22,10 +22,13 @@ export const authOptions: NextAuthOptions = {
             body: JSON.stringify({ email, password }),
           })
 
+          const json = await response.json()
+     
           if(response.status == 200) {
-
+            return json
+          } else {
+            return null
           }
-          return response.json()
         }
       },
     }),

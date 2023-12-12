@@ -25,29 +25,20 @@ export default function Login() {
             window.alert('Você já está logado!')
         }
     }, [session.status, router])
-    
-    async function handleConnectGoogle() {
-        if (session.status != 'unauthenticated') {
-          await signOut()
-    
-        }
-        await signIn('google', { callbackUrl: '/' })
-    
-      }
 
       async function handleLogin() {
         if (session.status != 'unauthenticated') {
             await signOut()
           }
           const res = await signIn('credentials', { redirect: false, callbackUrl: '/', email: email, password: password, })
-          /* if (res?.ok) {
+           if (res?.ok) {
             session.update({
                 ...session,
                 user: {
                     ...session.data?.user
                 }
             })
-          } */
+          } 
           console.log(res)
       }
 
