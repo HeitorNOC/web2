@@ -15,6 +15,7 @@ import { Input } from "../../components/ui/input"
 import { Button } from "../../components/ui/button"
 import { Progress } from "../../components/ui/progress"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     name: z
@@ -35,6 +36,8 @@ export default function SignUp() {
     const [emailChanged, setEmailChanged] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
     const [confirmPasswordChanged, setConfirmPassowrdChanged] = useState(false)
+
+    const router = useRouter()
 
     function handleBlur(fieldName: string, currentValue: string) {
         switch (fieldName) {
@@ -89,7 +92,7 @@ export default function SignUp() {
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const res = await fetch("http://task-api-production-ebcc.up.railway.app/api/users", {
+        const res = await fetch("https://task-api-production-ebcc.up.railway.app/api/users", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -99,7 +102,12 @@ export default function SignUp() {
             })
         })
 
-        console.log(res)
+        if (res.status === 201) {
+            window.alert('Usuário Criado com sucesso.')
+            router.push('/')
+        } else {
+            console.log('status: ', res.status)
+        }
     }
 
     const form = useForm<z.infer<typeof formSchema>>({

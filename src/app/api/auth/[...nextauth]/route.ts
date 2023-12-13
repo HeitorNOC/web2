@@ -14,16 +14,14 @@ export const authOptions: NextAuthOptions = {
           return null;
         } else {
           const { email, password } = credentials
-           const response = await fetch('https://task-api-production-ebcc.up.railway.app/api/login', {
+          const response = await fetch('https://task-api-production-ebcc.up.railway.app/api/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ email, password }),
           })
-
           const json = await response.json()
-     
           if(response.status == 200) {
             return json
           } else {
@@ -35,11 +33,12 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET as string,
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       return true
     },
 
     async session({ session, token, user }) {
+      session.user.id = Number(token.sub)
       return session;
     },
   }

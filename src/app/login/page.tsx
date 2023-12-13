@@ -1,6 +1,5 @@
 "use client"
 
-import Image from 'next/image'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
@@ -17,7 +16,6 @@ export default function Login() {
     const [password, setPassword] = useState("")
     const session = useSession()
     const router = useRouter()
-    console.log(session)
     
     useEffect(() => {
         if (session.status == 'authenticated') {
@@ -39,8 +37,7 @@ export default function Login() {
                 }
             })
           } 
-          console.log(res)
-      }
+      } 
 
     return (
         <div className="min-h-screen flex justify-center items-center">
