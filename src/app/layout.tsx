@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter as FontSans } from 'next/font/google'
+import { Roboto as FontSans } from 'next/font/google'
 import './globals.css'
 import { cn } from '../lib/utils'
 import { NextAuthProvider } from './nextAuthProvider'
@@ -7,6 +7,7 @@ import { NextAuthProvider } from './nextAuthProvider'
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
+  weight: ["500", "700"]
 })
 
 export const metadata: Metadata = {
