@@ -2,7 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import {
   Table,
   TableHeader,
@@ -16,13 +16,18 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function Home() {
   const [userLogged, setUserLogged] = useState<any>();
   const [tasks, setTasks] = useState<any[]>([]);
   const [originalTasks, setOriginalTasks] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [newTastkTitleInput, setNewTaskTitleInput] = useState('')
+  const [newTastkDescriptionInput, setNewTaskDescriptionInput] = useState('')
+  const [updateTaskTitleInput, setUpdateTaskTitleInput] = useState('')
+  const [updateTaskDescriptionInput, setUpdateTaskDescriptionInput] = useState('')
 
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -63,31 +68,83 @@ export default function Home() {
     setTasks(updatedTasks);
   }
 
-  async function saveChanges() {
-    await fetch('URL_DO_SEU_BACKEND', {
-      method: 'POST',
-      body: JSON.stringify(tasks),
+  async function saveChanges(taskID: number) {
+    const fullTask = tasks.find((task) => task.id == taskID)
+    const res = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${taskID}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ...fullTask })
+    })
 
-    });
-    setOriginalTasks([...tasks])
+    if (!res.ok) {
+      window.alert('Status não foi editado.')
+      router.push('/')
+    } else {
+      window.location.reload()
+    }
   }
 
   function cancelChanges() {
-    setTasks([...originalTasks]);
+    window.location.reload()
+  }
+
+  async function saveAllChanges() {
+    let actualTask: []
+    for (let i = 0;tasks.length < i;i++) {
+
+      const res = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${tasks[i].id}`, {
+        method: 'DELETE'
+      })
+      if (!res.ok) {
+        window.alert(`Erro ao apagar a task ${tasks[i].title}`)
+        return
+      }
+    }
+
+    for (let e = 0;tasks.length < e;e++) {
+      const responseCreate = await fetch('https://task-api-production-ebcc.up.railway.app/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...tasks[e]
+        })
+      })
+      if (!responseCreate.ok) {
+        window.alert('Erro ao salvar dados.')
+      }
+    }
+
+    window.location.reload()
   }
 
   async function updateItem(itemId: number) {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === itemId) {
-
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
+    const status = tasks.find((task) => task.id == itemId).status
+    const res = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${itemId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: updateTaskTitleInput,
+        description: updateTaskDescriptionInput,
+        status
+      })
+    })
+    if (!res.ok) {
+      window.alert('Erro ao atualizar a task.')
+      window.location.reload()
+      return
+    } else {
+      window.location.reload()
+    }
   }
 
   async function handleLogOut() {
-    await signOut({callbackUrl: '/login', redirect: true})
+    await signOut({ callbackUrl: '/login', redirect: true })
   }
 
   const filteredTasks = tasks.filter(task =>
@@ -95,8 +152,49 @@ export default function Home() {
     task.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  async function handleSubmitNewTask() {
+    if (newTastkTitleInput.length > 2 && newTastkDescriptionInput.length > 2) {
+      const res = await fetch('https://task-api-production-ebcc.up.railway.app/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newTastkTitleInput,
+          description: newTastkDescriptionInput,
+          status: false,
+          userId: userLogged.id
+        })
+      })
+
+      if (!res.ok) {
+        window.alert('Erro ao criar a task.')
+        router.push('/')
+      } else {
+        window.alert('Task adicionada com sucesso.')
+        setNewTaskDescriptionInput('')
+        setNewTaskTitleInput('')
+        window.location.reload()
+      }
+    }
+  }
+
+  async function handleDeleteTask(taskID: number) {
+    const res = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${taskID}`, {
+      method: 'DELETE',
+    })
+
+    if (!res.ok) {
+      const json = await res.json()
+      window.alert('Erro ao remover a task.' + taskID + json)
+      return
+    } else {
+      window.location.reload()
+    }
+  }
+
   return userLogged ? (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen py-96">
       <div className="w-1/2 gap-4 h-screen flex flex-col justify-center">
         <div className="flex items-center justify-center mb-6">
           <h1 className="text-6xl">TASK LIST</h1>
@@ -110,47 +208,49 @@ export default function Home() {
 
         </div>
         <div className="flex gap-4">
-
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant={"save"}>
-                <Plus size={20} />
-                Novo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Adicionar Task</DialogTitle>
-                <DialogDescription>
-                  Após preencher os campos título e descrição,<br></br> clique em confirmar para adicionar a task.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-start gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title" >
-                    Título
-                  </Label>
-                  <Input
-                    id="title"
-                    className="w-96"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description" >
-                    Descrição
-                  </Label>
-                  <Input
-                    id="description"
-                    className="w-96"
-                  />
-                </div>
-                <Button type="submit" variant={"confirm"} className="px-3">
-                  Confirmar
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant={"save"}>
+                  <Plus size={20} />
+                  Novo
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Task</DialogTitle>
+                  <DialogDescription>
+                    Após preencher os campos título e descrição,<br></br> clique em confirmar para adicionar a task.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-start gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title" >
+                      Título
+                    </Label>
+                    <Input
+                      id="title"
+                      className="w-96"
+                      value={newTastkTitleInput}
+                      onChange={(e) => setNewTaskTitleInput(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description" >
+                      Descrição
+                    </Label>
+                    <Input
+                      id="description"
+                      className="w-96"
+                      value={newTastkDescriptionInput}
+                      onChange={(e) => setNewTaskDescriptionInput(e.target.value)}
+                    />
+                  </div>
+                  <Button id="addNewTask" key={"addNewTask"} type="button" onClick={handleSubmitNewTask} variant={"confirm"} className="px-3" >
+                    Confirmar
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
 
           <input
@@ -174,11 +274,10 @@ export default function Home() {
             {filteredTasks.map((task) => (
               <TableRow key={task.id}>
                 <TableCell>
-                  <div
-                    className={`w-6 h-6 rounded-full mr-4 cursor-pointer ${task.status ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
+                  <Checkbox
                     onClick={() => toggleStatus(task.id)}
-                  ></div>
+                    checked={task.status}
+                  />
                 </TableCell>
                 <TableCell className={task.status ? 'line-through text-green-500' : ''}>{task.title}</TableCell>
                 <TableCell className={task.status ? 'line-through text-green-500' : ''}>{task.description}</TableCell>
@@ -189,7 +288,10 @@ export default function Home() {
                       <HoverCardTrigger>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button className="bg-transparent">
+                            <Button className="bg-transparent" onClick={(e) => {
+                              setUpdateTaskTitleInput(task.title);
+                              setUpdateTaskDescriptionInput(task.description)
+                            }}>
                               <PencilLine size={20} />
                             </Button>
                           </DialogTrigger>
@@ -207,8 +309,9 @@ export default function Home() {
                                 </Label>
                                 <Input
                                   id="title"
-                                  defaultValue={task.title}
                                   className="w-96"
+                                  value={updateTaskTitleInput}
+                                  onChange={(e) => setUpdateTaskTitleInput(e.target.value)}
                                 />
                               </div>
                               <div className="grid gap-2">
@@ -217,11 +320,12 @@ export default function Home() {
                                 </Label>
                                 <Input
                                   id="description"
-                                  defaultValue={task.description}
                                   className="w-96"
+                                  value={updateTaskDescriptionInput}
+                                  onChange={(e) => setUpdateTaskDescriptionInput(e.target.value)}
                                 />
                               </div>
-                              <Button type="submit" variant={"confirm"} className="px-3">
+                              <Button id="updateTask" key={"updateTask"} type="button" onClick={() => updateItem(task.id)} variant={"confirm"} className="px-3">
                                 Confirmar
                               </Button>
                             </div>
@@ -233,10 +337,10 @@ export default function Home() {
                       </HoverCardContent>
                     </HoverCard>
 
-                    <Button className="bg-transparent" variant={"save"}>
+                    <Button id="saveTask" key={"saveTask"} className="bg-transparent" variant={"save"} onClick={() => saveChanges(task.id)}>
                       <Save size={20} />
                     </Button>
-                    <Button className="bg-transparent" variant={"destructive"} >
+                    <Button id="deleteTask" key={"deleteTask"} className="bg-transparent" variant={"destructive"} onClick={(e) => handleDeleteTask(task.id)} >
                       <Trash2 size={20} />
                     </Button>
                   </div>
@@ -246,8 +350,8 @@ export default function Home() {
           </TableBody>
         </Table>
         <div className="flex justify-start w-full mt-4 gap-4">
-          <button onClick={saveChanges} className="bg-green-700 text-white px-4 py-2 rounded-md">Salvar Tudo</button>
-          <button onClick={cancelChanges} className="bg-red-700 text-white px-4 py-2 rounded-md">Cancelar Alterações</button>
+          <button id="saveAllTasks" key={"saveAllTasks"} onClick={saveAllChanges} className="bg-green-700 text-white px-4 py-2 rounded-md">Salvar Tudo</button>
+          <button id="cancelTasks" key={"cancelTasks"} onClick={cancelChanges} className="bg-red-700 text-white px-4 py-2 rounded-md">Cancelar Alterações</button>
         </div>
       </div>
     </div>
