@@ -76,4 +76,28 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+const CardNotAllowedTitle = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex justify-center p-4 pt-4 text-6xl font-semibold", className)}
+    {...props}
+  />
+))
+CardNotAllowedTitle.displayName = "CardNotAllowedTitle"
+
+const CardNotAllowedDescription = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center justify-center p-4 pt-4 text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardNotAllowedDescription.displayName = "CardNotAllowedDescription"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, CardNotAllowedTitle, CardNotAllowedDescription }
