@@ -104,7 +104,7 @@ export default function SignUp() {
 
         if (res.status === 201) {
             window.alert('Usuário Criado com sucesso.')
-            router.push('/')
+            router.push('/login')
         } else {
             console.log('status: ', res.status)
         }

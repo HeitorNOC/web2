@@ -11,13 +11,14 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { LogOut, PencilLine, Plus, Save, Trash2 } from "lucide-react";
+import { AlertCircle, LogOut, PencilLine, Plus, Save, Trash2 } from "lucide-react";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function Home() {
   const [userLogged, setUserLogged] = useState<any>();
@@ -91,33 +92,23 @@ export default function Home() {
   }
 
   async function saveAllChanges() {
-    let actualTask: []
-    for (let i = 0;tasks.length < i;i++) {
-
-      const res = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${tasks[i].id}`, {
-        method: 'DELETE'
-      })
-      if (!res.ok) {
-        window.alert(`Erro ao apagar a task ${tasks[i].title}`)
-        return
-      }
-    }
-
-    for (let e = 0;tasks.length < e;e++) {
-      const responseCreate = await fetch('https://task-api-production-ebcc.up.railway.app/api/tasks', {
-        method: 'POST',
+    for (let e = 0;tasks.length > e;e++) {
+      const responseCreate = await fetch(`https://task-api-production-ebcc.up.railway.app/api/tasks/${tasks[e].id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...tasks[e]
+          title: tasks[e].title,
+          description: tasks[e].description,
+          status: tasks[e].status
         })
       })
       if (!responseCreate.ok) {
         window.alert('Erro ao salvar dados.')
+        return
       }
     }
-
     window.location.reload()
   }
 
@@ -208,49 +199,49 @@ export default function Home() {
 
         </div>
         <div className="flex gap-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant={"save"}>
-                  <Plus size={20} />
-                  Novo
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Task</DialogTitle>
-                  <DialogDescription>
-                    Após preencher os campos título e descrição,<br></br> clique em confirmar para adicionar a task.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col items-start gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title" >
-                      Título
-                    </Label>
-                    <Input
-                      id="title"
-                      className="w-96"
-                      value={newTastkTitleInput}
-                      onChange={(e) => setNewTaskTitleInput(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="description" >
-                      Descrição
-                    </Label>
-                    <Input
-                      id="description"
-                      className="w-96"
-                      value={newTastkDescriptionInput}
-                      onChange={(e) => setNewTaskDescriptionInput(e.target.value)}
-                    />
-                  </div>
-                  <Button id="addNewTask" key={"addNewTask"} type="button" onClick={handleSubmitNewTask} variant={"confirm"} className="px-3" >
-                    Confirmar
-                  </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant={"save"}>
+                <Plus size={20} />
+                Novo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Task</DialogTitle>
+                <DialogDescription>
+                  Após preencher os campos título e descrição,<br></br> clique em confirmar para adicionar a task.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-start gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title" >
+                    Título
+                  </Label>
+                  <Input
+                    id="title"
+                    className="w-96"
+                    value={newTastkTitleInput}
+                    onChange={(e) => setNewTaskTitleInput(e.target.value)}
+                  />
                 </div>
-              </DialogContent>
-            </Dialog>
+                <div className="grid gap-2">
+                  <Label htmlFor="description" >
+                    Descrição
+                  </Label>
+                  <Input
+                    id="description"
+                    className="w-96"
+                    value={newTastkDescriptionInput}
+                    onChange={(e) => setNewTaskDescriptionInput(e.target.value)}
+                  />
+                </div>
+                <Button id="addNewTask" key={"addNewTask"} type="button" onClick={handleSubmitNewTask} variant={"confirm"} className="px-3" >
+                  Confirmar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
 
           <input
@@ -271,7 +262,7 @@ export default function Home() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTasks.map((task) => (
+            {tasks.length > 1 ? filteredTasks.map((task) => (
               <TableRow key={task.id}>
                 <TableCell>
                   <Checkbox
@@ -346,7 +337,17 @@ export default function Home() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            )) : (
+              <div className="py-10">
+                <Alert variant="destructive" className="flex flex-col items-start justify-start">
+                  <AlertCircle className="h-4 w-4 mt-2" />
+                  <AlertTitle className="text-lg font-bold">Você não tem nenhuma task criada.</AlertTitle>
+                  <AlertDescription>
+                    Clique em <span>Novo</span> para criar uma task nova.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
           </TableBody>
         </Table>
         <div className="flex justify-start w-full mt-4 gap-4">
